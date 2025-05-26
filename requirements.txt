@@ -1,2 +1,3 @@
 
 requests
+hyperliquid-python-sdk
