@@ -10,7 +10,7 @@ BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 info = Info(constants.MAINNET_API_URL, skip_ws=True)
-last_state_str = ""
+last_position_string = ""
 
 def send_message(message):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -20,26 +20,30 @@ def send_message(message):
     except Exception as e:
         print(f"[錯誤] 發送 Telegram 訊息失敗：{e}")
 
-def format_position(position):
-    coin = position["position"]["coin"]
-    size = float(position["position"]["szi"])
-    side = "多單" if size > 0 else "空單"
-    entry = float(position["position"]["entryPx"])
-    return f"{coin} {side} 倉位：數量 {abs(size)}，進場價 {entry}"
+def format_all_positions(positions):
+    lines = []
+    for p in positions:
+        sz = float(p["position"]["szi"])
+        if abs(sz) > 0:
+            coin = p["position"]["coin"]
+            entry = float(p["position"]["entryPx"])
+            side = "多單" if sz > 0 else "空單"
+            lines.append(f"{coin} {side} 倉位：數量 {abs(sz)}，進場價 {entry}")
+    return "\n".join(lines) if lines else "目前已無持倉。"
 
 def monitor():
-    global last_state_str
+    global last_position_string
     try:
         user_state = info.user_state(ADDRESS)
         positions = user_state.get("assetPositions", [])
-        current_state = "\n".join([format_position(p) for p in positions]) if positions else "目前已無持倉。"
+        formatted = format_all_positions(positions)
 
-        if current_state != last_state_str:
-            if positions:
-                send_message(f"📈 [倉位更新] James Wynn 現在持有：\n{current_state}")
-            else:
+        if formatted != last_position_string:
+            if "無持倉" in formatted:
                 send_message("📉 [倉位清空] James Wynn 目前已無持倉。")
-            last_state_str = current_state
+            else:
+                send_message(f"📈 [倉位更新] James Wynn 現在持有：\n{formatted}")
+            last_position_string = formatted
     except Exception as e:
         send_message(f"[錯誤] 無法取得 SDK 倉位資訊：{e}")
 
