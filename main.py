@@ -20,10 +20,8 @@ def send_message(message):
 def fetch_position():
     url = "https://api.hyperliquid.xyz/info"
     payload = {
-        "method": "getUserState",
-        "params": {
-            "user": ADDRESS
-        }
+        "type": "getUserState",
+        "user": ADDRESS
     }
     headers = {
         "Content-Type": "application/json",
@@ -71,4 +69,4 @@ if __name__ == "__main__":
     send_message("✅ 追蹤啟動：開始監控 James Wynn 在 Hyperliquid 的倉位...")
     while True:
         monitor()
-        time.sleep(300)  # 每 5 分鐘監測一次
+        time.sleep(300)
