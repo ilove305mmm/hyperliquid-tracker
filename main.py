@@ -20,12 +20,11 @@ def send_message(message):
 def fetch_position():
     url = "https://api.hyperliquid.xyz/info"
     payload = {
-        "type": "getUserState",
+        "type": "hyperliquid_getUserState",
         "user": ADDRESS
     }
     headers = {
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0"
+        "Content-Type": "application/json"
     }
     try:
         r = requests.post(url, json=payload, headers=headers, timeout=10)
