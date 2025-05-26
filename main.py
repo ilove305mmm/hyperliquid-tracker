@@ -12,7 +12,10 @@ last_position_state = None
 def send_message(message):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {"chat_id": CHAT_ID, "text": message}
-    requests.post(url, data=payload)
+    try:
+        requests.post(url, data=payload, timeout=5)
+    except Exception as e:
+        print(f"[錯誤] 無法發送 Telegram 訊息：{e}")
 
 def fetch_position():
     url = "https://api.hyperliquid.xyz/info"
@@ -20,8 +23,20 @@ def fetch_position():
         "type": "hyperliquid_getUserState",
         "user": ADDRESS
     }
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0"
+    }
     try:
-        r = requests.post(url, json=payload, timeout=10)
+        r = requests.post(url, json=payload, headers=headers, timeout=10)
+        if r.status_code != 200:
+            send_message(f"[錯誤] API 回應碼：{r.status_code}")
+            return None
+
+        if not r.text.strip():
+            send_message("[錯誤] API 回傳空白，可能是被擋或 Hyperliquid 無回應")
+            return None
+
         data = r.json()
         return data.get("assetPositions", [])
     except Exception as e:
@@ -54,4 +69,4 @@ if __name__ == "__main__":
     send_message("✅ 追蹤啟動：開始監控 James Wynn 在 Hyperliquid 的倉位...")
     while True:
         monitor()
-        time.sleep(300)  # 每 5 分鐘監測一次
+        time.sleep(300)
